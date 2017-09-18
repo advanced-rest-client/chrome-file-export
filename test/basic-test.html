@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/test-helpers.js"></script>
+    <script src="stub.js"></script>
+    <link rel="import" href="../chrome-file-export.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <chrome-file-export></chrome-file-export>
+      </template>
+    </test-fixture>
+
+    <script>
+    /* global fixture, assert */
+    suite('basic', function() {
+
+      var element;
+      setup(function() {
+        element = fixture('basic');
+      });
+
+      test('writes string content', function(done) {
+        var data = 'test';
+        var mime = 'text/plain';
+        element.addEventListener('export-data-end', function() {
+          done();
+        });
+        element.addEventListener('export-data-error', function(e) {
+          done(new Error('error ocurred ' + e.detail.message));
+        });
+        element.writeFile(data, mime);
+      });
+
+      test('writes object content', function(done) {
+        var data = {
+          'test': 'value'
+        };
+        var mime = 'application/json';
+        element.addEventListener('export-data-end', function() {
+          done();
+        });
+        element.addEventListener('export-data-error', function(e) {
+          done(new Error('error ocurred ' + e.detail.message));
+        });
+        element.writeFile(data, mime);
+      });
+
+      test('writes blob content', function(done) {
+        var data = new Blob(['test', 'text/plain']);
+        var mime = 'text/plain';
+        element.addEventListener('export-data-end', function() {
+          done();
+        });
+        element.addEventListener('export-data-error', function(e) {
+          done(new Error('error ocurred ' + e.detail.message));
+        });
+        element.writeFile(data, mime);
+      });
+
+      test('Calls writeFile on event', function(done) {
+        var data = 'test-data';
+        var mime = 'test-mime';
+        var file = 'test-file';
+
+        element.writeFile = function(eventData, eventMime, eventFile) {
+          assert.equal(data, eventData);
+          assert.equal(mime, eventMime);
+          assert.equal(file, eventFile);
+          done();
+        };
+        var event = new CustomEvent('export-data', {
+          detail: {
+            data: data,
+            type: mime,
+            file: file
+          },
+          cancelable: true,
+          bubbles: true
+        });
+        document.body.dispatchEvent(event);
+        assert.isTrue(event.defaultPrevented);
+      });
+    });
+    </script>
+
+  </body>
+</html>
